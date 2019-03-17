@@ -42,6 +42,7 @@ from pathpy.visualisation.alluvial import generate_memory_net
 from pathpy.visualisation.alluvial import generate_diffusion_net
 from pathpy.visualisation.alluvial import generate_memory_net_markov
 
+
 @singledispatch
 def plot(network, **params):
     """
@@ -99,7 +100,7 @@ def plot(network, **params):
                 Both HTML named colors ('red, 'blue', 'yellow') or HEX-RGB values can
                 be used. Default value is "#99ccff". (lightblue)
             node_text: string, dict (Network, HigherOrderNetwork, MultiOrderModel)
-                A text displayed when hovering over nodes, e.g. containing node properties, full names, etc. 
+                A text displayed when hovering over nodes, e.g. containing node properties, full names, etc.
                 Defaults to node names.
             edge_color: string, dict (Network, HigherOrderNetwork, TemporalNetwork, MultiOrderModel)
                 Either a string value that specifies the HTML color of all edges,
@@ -107,11 +108,11 @@ def plot(network, **params):
                 Both HTML named colors ('red, 'blue', 'yellow') or HEX-RGB values can
                 be used. Default value is "#cccccc" (lightgray).
             edge_opacity: float (Network, HigherOrderNetwork, TemporalNetwork, MultiOrderModel)
-                The opacity of all edges in a range from 0.0 to 1.0. Default value is 1.0.             
+                The opacity of all edges in a range from 0.0 to 1.0. Default value is 1.0.
             edge_arrows: bool (Network, HigherOrderNetwork, MultiOrderNetwork)
                 Whether to draw edge arrows for directed networks. Default value is True.
             label_color: string (Network, HigherOrderNetwork, TemporalNetwork, MultiOrderModel)
-                The HTML color of node labels.  Both HTML named colors ('red, 'blue', 'yellow') 
+                The HTML color of node labels.  Both HTML named colors ('red, 'blue', 'yellow')
                 or HEX-RGB values can be used.Default value is '#cccccc' (lightgray).
             label_opacity: float (Network, HigherOrderNetwork, TemporalNetwork, MultiOrderModel)
                 The opacity of the label. Default value is 1.0.
@@ -155,7 +156,7 @@ def plot(network, **params):
                 Values larger than one result in smoothly changing layouts.
                 Default value is 10.
             max_time: int (TemporalNetwork)
-                maximum time stamp to visualise. Useful to limit visualisation of very long Temporal Networks. 
+                maximum time stamp to visualise. Useful to limit visualisation of very long Temporal Networks.
                 If None, the whole sequence will be shown. Default is None.
             active_edge_width: float (TemporalNetwork)
                 A float value that specifies the width of currently active edges.
@@ -200,12 +201,12 @@ def plot(network, **params):
 
 
 @singledispatch
-def generate_html(network, **params):
+def generate_json(network, **params):
     """
-    Generates an HTML snippet that contains an interactive d3js visualization
+    Generates json to be used by an interactive d3js visualization
     of the given instance. This function supports instances of pathpy.Network,
     pathpy.TemporalNetwork, pathpy.HigherOrderNetwork, pathpy.Paths, and pathpy.Paths.
-    
+
     Parameters:
     -----------
         network: Network, TemporalNetwork, HigherOrderNetwork, MultiOrderModel, Paths
@@ -216,7 +217,7 @@ def generate_html(network, **params):
             visualisation templates extendable by the user. For supported parameters
             see docstring of plot.
     """
-    assert isinstance(network, Network) or isinstance(network, MultiOrderModel),\
+    assert isinstance(network, Network) or isinstance(network, MultiOrderModel), \
         "Argument must be an instance of Network, HigherOrderNetwork, or MultiOrderModel"
 
     if 'plot_higher_order_nodes' not in params:
@@ -261,7 +262,7 @@ def generate_html(network, **params):
         else:
             raise Exception(
                 'Edge and node attribute must either be dict or {0}'.format(type(attr_default))
-                )
+            )
 
     def compute_weight(network, e):
         """
@@ -281,8 +282,8 @@ def generate_html(network, **params):
             source_weight = source_weight.sum()
             target_weight = target_weight.sum()
         s = min(source_weight, target_weight)
-        if s>0.0:
-            return weight/s
+        if s > 0.0:
+            return weight / s
         else:
             return 0.0
 
@@ -292,13 +293,13 @@ def generate_html(network, **params):
                                'color': get_attr((e[0], e[1]), 'edge_color', '#999999'),
                                'width': get_attr((e[0], e[1]), 'edge_width', 0.5),
                                'weight': compute_weight(network, e) if hon is None and mog is None else 0.0
-                              } for e in network.edges.keys()]
-                   }
-    network_data['nodes'] = [{'id': fix_node_name(v),
-                              'text': get_attr(v, 'node_text', fix_node_name(v)),
-                              'color': get_attr(v, 'node_color', '#99ccff'),
-                              'size': get_attr(v, 'node_size', 5.0)} for v in network.nodes]
-    
+                               } for e in network.edges.keys()],
+                    'nodes': [{'id': fix_node_name(v),
+                               'text': get_attr(v, 'node_text', fix_node_name(v)),
+                               'color': get_attr(v, 'node_color', '#99ccff'),
+                               'size': get_attr(v, 'node_size', 5.0)} for v
+                              in network.nodes]}
+
     # calculate network of higher-order forces between nodes
     from collections import defaultdict
     higher_order_forces = Network()
@@ -307,14 +308,14 @@ def generate_html(network, **params):
         for e in hon.edges:
             v = fix_node_name(hon.higher_order_node_to_path(e[0])[0])
             w = fix_node_name(hon.higher_order_node_to_path(e[1])[-1])
-            if (v,w) in higher_order_forces.edges:
-                weight = higher_order_forces.edges[(v,w)]['weight'] + hon.edges[e]['weight']
-            else: 
+            if (v, w) in higher_order_forces.edges:
+                weight = higher_order_forces.edges[(v, w)]['weight'] + hon.edges[e]['weight']
+            else:
                 weight = hon.edges[e]['weight']
             higher_order_forces.add_edge(v, w, weight=weight)
 
     if mog is not None:
-        for l in range(1, mog.max_order+1):
+        for l in range(1, mog.max_order + 1):
             for e in mog.layers[l].edges:
                 v = fix_node_name(mog.layers[l].higher_order_node_to_path(e[0])[0])
                 w = fix_node_name(mog.layers[l].higher_order_node_to_path(e[1])[-1])
@@ -332,6 +333,11 @@ def generate_html(network, **params):
                                       'weight': compute_weight(higher_order_forces, (v, w)),
                                       'color': ' #999999'})
 
+    return json.dumps(network_data)
+
+
+@singledispatch
+def generate_html(network, **params):
     # DIV params
     if 'height' not in params:
         params['height'] = 400
@@ -367,7 +373,7 @@ def generate_html(network, **params):
 
     # arrows
     if 'edge_arrows' not in params:
-            params['edge_arrows'] = 'true'
+        params['edge_arrows'] = 'true'
     else:
         params['edge_arrows'] = str(params['edge_arrows']).lower()
 
@@ -379,7 +385,7 @@ def generate_html(network, **params):
 
     module_dir = os.path.dirname(os.path.realpath(__file__))
     html_dir = os.path.join(module_dir, os.path.pardir, 'visualisation_assets')
-    
+
     # We have three options to lod the d3js library:
 
     # 1.) Via a URL of a local copy in pathpy's visualisation assets
@@ -398,7 +404,7 @@ def generate_html(network, **params):
         params['d3js_path'] = 'https://d3js.org/d3.v4.min.js'
 
     d3js_params = {
-        'network_data': json.dumps(network_data),
+        'network_data': generate_json(network, **params),
         'div_id': div_id,
     }
 
@@ -410,7 +416,7 @@ def generate_html(network, **params):
     else:
         template_file = params['template']
 
-    # Read template file ... 
+    # Read template file ...
     with open(template_file) as f:
         html_str = f.read()
 
@@ -424,7 +430,7 @@ def generate_html(network, **params):
 def export_html(network, filename, **params):
     """
     Exports a stand-alone HTML file that contains an interactive d3js visualization
-    of the given pathpy instance. function supports instances of pathpy.Network, 
+    of the given pathpy instance. function supports instances of pathpy.Network,
     pathpy.TemporalNetwork, pathpy.HigherOrderNetwork, pathpy.Paths, and pathpy.Paths.
 
     Parameters
@@ -458,7 +464,6 @@ def _plot_tempnet(tempnet, **params):
 
 @generate_html.register(TemporalNetwork)
 def _generate_html_tempnet(tempnet, **params):
-    
     if 'ms_per_frame' not in params:
         params['ms_per_frame'] = 50
 
@@ -475,8 +480,8 @@ def _generate_html_tempnet(tempnet, **params):
     if params['ts_per_frame'] == 0:
         d = tempnet.inter_event_times()
         avg_ts_bw_interactions = _np.mean(d)
-        fps = 1000.0/float(params['ms_per_frame'])
-        x = avg_ts_bw_interactions/fps
+        fps = 1000.0 / float(params['ms_per_frame'])
+        x = avg_ts_bw_interactions / fps
         # set time scale so that we expect 5 interactions per frame
         params['ts_per_frame'] = _np.max([1, int(20 * x)])
 
@@ -504,7 +509,7 @@ def _generate_html_tempnet(tempnet, **params):
                    'target': fix_node_name(v),
                    'width': 1,
                    'time': t} for s, v, t in tempnet.tedges
-                 ]
+                  ]
     }
 
     # Size of DIV
@@ -592,7 +597,6 @@ def _generate_html_tempnet(tempnet, **params):
 
 @export_html.register(TemporalNetwork)
 def _export_html_tempnet(tempnet, filename, **params):
-
     html = generate_html(tempnet, **params)
 
     # for the inner HTML generated from the default templates, we add the surrounding DOCTYPE
@@ -622,7 +626,7 @@ def _generate_html_paths(paths, **params):
     else:
         params['node'] = list(paths.nodes)[0]
         node = params['node']
-    
+
     if 'markov' in params and params['markov']:
         n = generate_memory_net_markov(HigherOrderNetwork(paths, k=1), node, self_loops=self_loops)
     else:
@@ -639,7 +643,7 @@ def _generate_html_paths(paths, **params):
         'links': [{'source': int(node_idx[e[0]]),
                    'target': int(node_idx[e[1]]),
                    'value': n.edges[e]['weight']
-                  } for e in n.edges]
+                   } for e in n.edges]
     }
 
     div_id = "".join(random.choice(string.ascii_letters) for x in range(8))
@@ -679,6 +683,7 @@ def _export_html_paths(paths, filename, **params):
     with open(filename, 'w+') as f:
         f.write(html)
 
+
 def generate_html_diffusion(paths, **params):
     """
     Parameters
@@ -697,7 +702,7 @@ def generate_html_diffusion(paths, **params):
     else:
         params['node'] = list(paths.nodes)[0]
         node = params['node']
-    
+
     if 'markov' in params:
         markov = params['markov']
     else:
@@ -754,7 +759,7 @@ def export_html_diffusion(paths, filename, **params):
 
 def plot_walk(network, walk, **params):
     """
-    Plots an interactive visualisation of a random walk trajectory in 
+    Plots an interactive visualisation of a random walk trajectory in
     a network.
     """
 
@@ -772,7 +777,7 @@ def plot_walk(network, walk, **params):
     module_dir = os.path.dirname(os.path.realpath(__file__))
     html_dir = os.path.join(module_dir, os.path.pardir, 'visualisation_assets')
     params['template'] = os.path.join(html_dir, 'walk_template.html')
-    params['itinerary'] = [ fix_node_name(v) for v in walk ]
+    params['itinerary'] = [fix_node_name(v) for v in walk]
     if 'active_node_color' not in params:
         params['active_node_color'] = 'red'
     if 'inactive_node_color' not in params:
@@ -785,10 +790,10 @@ def plot_walk(network, walk, **params):
 
 def export_html_walk(network, walk, filename, **params):
     """
-    Exports an interactive visualisation of a random walk trajectory in 
+    Exports an interactive visualisation of a random walk trajectory in
     a network to a file.
     """
-    
+
     def fix_node_name(v):
         new_v = v
         if v[0].isdigit():
@@ -802,7 +807,7 @@ def export_html_walk(network, walk, filename, **params):
     module_dir = os.path.dirname(os.path.realpath(__file__))
     html_dir = os.path.join(module_dir, os.path.pardir, 'visualisation_assets')
     params['template'] = os.path.join(html_dir, 'walk_template.html')
-    params['itinerary'] = [ fix_node_name(v) for v in walk ]
+    params['itinerary'] = [fix_node_name(v) for v in walk]
     if 'active_node_color' not in params:
         params['active_node_color'] = 'red'
     if 'inactive_node_color' not in params:
