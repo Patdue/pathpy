@@ -4,7 +4,6 @@
 """pathpy setup script."""
 
 from setuptools import setup, find_packages
-from pathpy import __version__
 
 
 with open('README.rst', encoding='utf-8') as readme_file, open('HISTORY.rst', encoding='utf-8') as history_file:
@@ -39,7 +38,7 @@ setup(
     packages=find_packages(),
     test_suite='tests',
     url='https://www.pathpy.net',
-    version=__version__,
+    version='2.1.0',
     include_package_data=True,
     package_data={'pathpy': ['visualisation_assets/*.html'] + ['visualisation_assets/*.js']},
     zip_safe=False
